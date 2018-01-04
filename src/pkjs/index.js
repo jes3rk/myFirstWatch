@@ -23,7 +23,7 @@ var xhrRequest = function (url, type, callback) {
 function locationSuccess(pos) {
 	var myAPIKey = "bade789308f6d23dbadacc4e9e610642";
 	var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
-  pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=' + myAPIKey;
+  pos.coords.latitude + '&lon=' + pos.coords.longitude + '&units=imperial&appid=' + myAPIKey;
 	
 	
 	xhrRequest(url, 'GET', 
@@ -32,7 +32,7 @@ function locationSuccess(pos) {
       var json = JSON.parse(responseText);
 
       // Temperature in Kelvin requires adjustment
-      var temperature = Math.round(json.main.temp - 273.15);
+      var temperature = Math.round(json.main.temp);
       console.log('Temperature is ' + temperature);
 
       // Conditions

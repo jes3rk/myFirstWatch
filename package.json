@@ -1,0 +1,24 @@
+{
+    "author": "joseph.schefer@gmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "myfirstwatchface",
+    "pebble": {
+        "displayName": "MyFirstWatchFace",
+        "enableMultiJS": true,
+        "messageKeys": [],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite"
+        ],
+        "uuid": "52b0f4aa-7b8c-40f4-9256-06b5e2838127",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}

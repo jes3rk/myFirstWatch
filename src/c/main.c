@@ -3,6 +3,9 @@
 static Window *s_main_window;
 static TextLayer *s_time_layer;
 
+// Declare a global font
+static GFont s_time_font;
+
 static void update_time() {
 	// Get a tm structure
 	time_t temp = time(NULL);
@@ -33,7 +36,12 @@ static void main_window_load(Window *window) {
 	text_layer_set_background_color(s_time_layer, GColorClear);
 	text_layer_set_text_color(s_time_layer, GColorBlack);
 	text_layer_set_text(s_time_layer, "00:00");
-	text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+	
+	// Create GFont
+	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_48));
+	
+	// Apply the font to the text layer
+	text_layer_set_font(s_time_layer, s_time_font);
 	
 	// Add it as a child layer to the Window's root layer
 	layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
@@ -42,6 +50,9 @@ static void main_window_load(Window *window) {
 static void main_window_unload(Window *window) {
 	// Destroy text layer
 	text_layer_destroy(s_time_layer);
+	
+	// Unload the font
+	fonts_unload_custom_font(s_time_font);
 }
 
 static void init() {

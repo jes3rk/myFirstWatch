@@ -11,6 +11,12 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/background.png",
+                    "name": "IMAGE_BACKGROUND",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
                     "file": "fonts/perfect-dos-vga.ttf",
                     "name": "FONT_PERFECT_DOS_48",
                     "targetPlatforms": null,

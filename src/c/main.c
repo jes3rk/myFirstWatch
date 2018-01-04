@@ -97,6 +97,38 @@ static void main_window_unload(Window *window) {
 	fonts_unload_custom_font(s_weather_font);
 }
 
+static void inbox_recieved_callback(DictionaryIterator *iterator, void *context) {
+	static char temperature_buffer[8];
+	static char conditions_buffer[32];
+	static char weather_layer_buffer[32];
+	
+	// Read tuples for data
+	Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_TEMPERATURE);
+	Tuple *conditions_tuple = dict_find(iterator, MESSAGE_KEY_CONDITIONS);
+	
+	// if all data is available, use it
+	if(temp_tuple && conditions_tuple) {
+		snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)temp_tuple->value->int32);
+		snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", conditions_tuple->value->cstring);
+		
+		// Assemble ful string and display
+		snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "%s, %s", temperature_buffer, conditions_buffer);
+		text_layer_set_text(s_weather_layer, weather_layer_buffer);
+	}
+}
+
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
 static void init() {
 	// Create main Window element asnd assign to pointer
 	s_main_window = window_create();
@@ -118,6 +150,17 @@ static void init() {
 	
 	// Register with TickTimerService
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+	
+	// Register callbacks
+	app_message_register_inbox_received(inbox_recieved_callback);
+	app_message_register_inbox_dropped(inbox_dropped_callback);
+	app_message_register_outbox_failed(outbox_failed_callback);
+	app_message_register_outbox_sent(outbox_sent_callback);
+	
+	// Open AppMessage
+	const int inbox_size = 128;
+	const int outbox_size = 128;
+	app_message_open(inbox_size, outbox_size);
 }
 
 static void deinit() {

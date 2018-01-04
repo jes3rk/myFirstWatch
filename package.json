@@ -4,9 +4,15 @@
     "keywords": [],
     "name": "myfirstwatchface",
     "pebble": {
+        "capabilities": [
+            "location"
+        ],
         "displayName": "MyFirstWatchFace",
         "enableMultiJS": true,
-        "messageKeys": [],
+        "messageKeys": [
+            "TEMPERATURE",
+            "CONDITIONS"
+        ],
         "projectType": "native",
         "resources": {
             "media": [

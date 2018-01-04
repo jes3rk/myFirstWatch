@@ -3,6 +3,9 @@
 static Window *s_main_window;
 static TextLayer *s_time_layer;
 static TextLayer *s_weather_layer;
+static Layer *s_battery_layer;
+
+static int s_battery_level;
 
 // Declare a global font
 static GFont s_time_font;
@@ -27,6 +30,34 @@ static void update_time() {
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
+	
+	// Update weather every x minutes
+	if(tick_time->tm_min % 30 == 0) {
+		// Begin dictionary
+		DictionaryIterator *iter;
+		app_message_outbox_begin(&iter);
+		
+		// Add a key value pair
+		dict_write_uint8(iter, 0, 0);
+		
+		// Send the message!
+		app_message_outbox_send();
+	}
+}
+
+static void battery_update_proc(Layer *layer, GContext *ctx) {
+	GRect bounds = layer_get_bounds(layer);
+	
+	// Find the width of the bar (total width == 114);
+	int width = (s_battery_level * 114) / 100;
+	
+	// Draw the background
+	graphics_context_set_fill_color(ctx, GColorBlack);
+	graphics_fill_rect(ctx, bounds, 0, GCornerNone);
+	
+	// Draw the bar
+	graphics_context_set_fill_color(ctx, GColorWhite);
+	graphics_fill_rect(ctx, GRect(0, 0, width, bounds.size.h), 0, GCornerNone);
 }
 
 static void main_window_load(Window *window) {
@@ -77,6 +108,13 @@ static void main_window_load(Window *window) {
 	s_weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_20));
 	text_layer_set_font(s_weather_layer, s_weather_font);
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_layer));
+
+	// Create battery meter layer
+	s_battery_layer = layer_create(GRect(14, 54, 115, 2));
+	layer_set_update_proc(s_battery_layer, battery_update_proc);
+	
+	// Add to the window
+	layer_add_child(window_get_root_layer(window), s_battery_layer);
 }
 
 static void main_window_unload(Window *window) {
@@ -95,6 +133,9 @@ static void main_window_unload(Window *window) {
 	// Destroy weather elements
 	text_layer_destroy(s_weather_layer);
 	fonts_unload_custom_font(s_weather_font);
+	
+	// Destroy the battery level
+	layer_destroy(s_battery_layer);
 }
 
 static void inbox_recieved_callback(DictionaryIterator *iterator, void *context) {
@@ -129,6 +170,14 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
+static void battery_callback(BatteryChargeState state) {
+	// Record the new battery level
+	s_battery_level = state.charge_percent;
+	
+	// update meter
+	layer_mark_dirty(s_battery_layer);
+}
+
 static void init() {
 	// Create main Window element asnd assign to pointer
 	s_main_window = window_create();
@@ -161,6 +210,12 @@ static void init() {
 	const int inbox_size = 128;
 	const int outbox_size = 128;
 	app_message_open(inbox_size, outbox_size);
+	
+	// Register for battery level updates
+	battery_state_service_subscribe(battery_callback);
+	
+	// Ensure battery level is displayed from the start
+	battery_callback(battery_state_service_peek());
 }
 
 static void deinit() {
